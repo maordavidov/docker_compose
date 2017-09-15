@@ -15,6 +15,8 @@ services:
             - "30011:27017"
         networks:
           - "mongo"
+        volumes:
+          - mongo1:/data/db
     mongo-2:
         hostname: mongo-2
         image: mongo:3.5.13
@@ -30,6 +32,8 @@ services:
             - "30012:27017"
         networks:
           - "mongo"
+        volumes:
+          - mongo2:/data/db
     mongo-arb:
         hostname: mongo-arb
         image: mongo:3.5.13
@@ -62,4 +66,6 @@ services:
 networks:
     mongo:
         driver: overlay
-        attachable: true
+volumes:
+    mongo1:
+    mongo2:
