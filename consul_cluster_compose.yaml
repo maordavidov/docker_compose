@@ -1,0 +1,79 @@
+version: '3.3'
+
+#customise this with options from
+#https://www.consul.io/docs/agent/options.html
+
+services:
+
+  seed:
+    hostname: seed
+    image: consul:0.9.3
+    deploy:
+      replicas: 1
+    environment:
+      - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
+      - "CONSUL_BIND_INTERFACE=eth0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -bootstrap-expect=5
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+    networks:
+      - "consul"
+    volumes:
+      - consul_seed:/tmp/consuldata
+
+  cluster:
+    image: consul:0.9.3
+    depends_on:
+      - seed
+    deploy:
+      replicas: 4
+      mode: replicated
+    environment:
+      - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
+      - "CONSUL_BIND_INTERFACE=eth0"
+      - "CONSUL_HTTP_ADDR=0.0.0.0"
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -client=0.0.0.0
+      - -retry-join=seed:8301
+    networks:
+      - "consul"
+      
+  clients:
+    image: consul:0.9.3
+    depends_on:
+      - seed
+    deploy:
+      replicas: 1
+      mode: replicated
+    environment:
+      - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
+      - "CONSUL_BIND_INTERFACE=eth0"
+      - "CONSUL_HTTP_ADDR=0.0.0.0"
+    entrypoint:
+      - consul
+      - agent
+      - -ui
+      - -data-dir=/tmp/consuldata
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -client=0.0.0.0
+      - -retry-join=seed:8301
+    networks:
+      - "consul"
+    ports:
+      - 8501:8500
+ 
+networks:
+  consul:
+    driver: overlay
+    
+volumes:
+  consul_seed:
