@@ -5,8 +5,8 @@ version: '3.3'
 
 services:
 
-  seed:
-    hostname: seed
+  consul_seed:
+    hostname: consul_seed
     image: consul:0.9.3
     deploy:
       replicas: 1
@@ -25,10 +25,10 @@ services:
     volumes:
       - consul_seed:/tmp/consuldata
 
-  cluster:
+  consul_cluster:
     image: consul:0.9.3
     depends_on:
-      - seed
+      - consul_seed
     deploy:
       replicas: 4
       mode: replicated
@@ -43,14 +43,14 @@ services:
       - -data-dir=/tmp/consuldata
       - -bind={{ GetInterfaceIP "eth0" }}
       - -client=0.0.0.0
-      - -retry-join=seed:8301
+      - -retry-join=consul_seed:8301
     networks:
       - "consul"
       
-  clients:
+  consul_clients:
     image: consul:0.9.3
     depends_on:
-      - seed
+      - consul_seed
     deploy:
       replicas: 1
       mode: replicated
@@ -65,7 +65,7 @@ services:
       - -data-dir=/tmp/consuldata
       - -bind={{ GetInterfaceIP "eth0" }}
       - -client=0.0.0.0
-      - -retry-join=seed:8301
+      - -retry-join=consul_seed:8301
     networks:
       - "consul"
     ports:
@@ -76,4 +76,4 @@ networks:
     driver: overlay
     
 volumes:
-  consul_seed:
+  consul_consul_seed:
