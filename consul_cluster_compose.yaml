@@ -76,4 +76,4 @@ networks:
     driver: overlay
     
 volumes:
-  consul_consul_seed:
+  consul_seed:
