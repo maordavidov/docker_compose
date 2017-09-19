@@ -17,20 +17,20 @@ services:
       - consul
       - agent
       - -server
-      - -bootstrap-expect=5
+      - -bootstrap-expect=3
       - -data-dir=/tmp/consuldata
       - -bind={{ GetInterfaceIP "eth0" }}
     networks:
       - "consul"
     volumes:
       - consul_seed:/tmp/consuldata
-
+  
   consul_cluster:
     image: consul:0.9.3
     depends_on:
       - consul_seed
     deploy:
-      replicas: 4
+      replicas: 2
       mode: replicated
     environment:
       - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
@@ -42,8 +42,8 @@ services:
       - -server
       - -data-dir=/tmp/consuldata
       - -bind={{ GetInterfaceIP "eth0" }}
-      - -client=0.0.0.0
       - -retry-join=consul_seed:8301
+      - -bootstrap-expect=3
     networks:
       - "consul"
       
@@ -52,24 +52,23 @@ services:
     depends_on:
       - consul_seed
     deploy:
-      replicas: 1
-      mode: replicated
+      mode: global
     environment:
       - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
-      - "CONSUL_BIND_INTERFACE=eth0"
+      - "CONSUL_BIND_INTERFACE=eth2"
       - "CONSUL_HTTP_ADDR=0.0.0.0"
     entrypoint:
       - consul
       - agent
       - -ui
       - -data-dir=/tmp/consuldata
-      - -bind={{ GetInterfaceIP "eth0" }}
+      - -bind={{ GetInterfaceIP "eth2" }}
       - -client=0.0.0.0
       - -retry-join=consul_seed:8301
     networks:
       - "consul"
     ports:
-      - 8501:8500
+      - 8500:8500
  
 networks:
   consul:
